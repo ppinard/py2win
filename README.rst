@@ -2,6 +2,9 @@
 py2win
 ######
 
+.. image:: https://img.shields.io/pypi/v/py2win.svg
+   :target: https://pypi.python.org/pypi/py2win
+
 .. image:: https://ci.appveyor.com/api/projects/status/github/ppinard/py2win?svg=true
    :target: https://ci.appveyor.com/project/ppinard/py2win
 
