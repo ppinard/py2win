@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
         self.project_name = project_name
         self.project_version = project_version
         self.extra_wheel_dir = extra_wheel_dir
+        self.requirements = []
         self.wheel_filepaths = []
         self.scripts = []
 
@@ -121,6 +122,9 @@ int main(int argc, char *argv[])
                 os.remove(filepath)
 
     def _install_wheels(self, python_executable):
+        if not self.wheel_filepaths:
+            return
+
         args = [python_executable, '-m', 'pip', 'install', '-U']
         if self.extra_wheel_dir:
             args += ['--find-links', self.extra_wheel_dir]
@@ -130,6 +134,18 @@ int main(int argc, char *argv[])
         if self.extra_wheel_dir:
             for filepath in glob.glob(os.path.join(self.extra_wheel_dir, '*.whl')):
                 args.append(filepath)
+
+        subprocess.run(args, check=True)
+
+    def _install_requirements(self, python_executable):
+        if not self.requirements:
+            return
+
+        args = [python_executable, '-m', 'pip', 'install', '-U']
+        if self.extra_wheel_dir:
+            args += ['--find-links', self.extra_wheel_dir]
+
+        args.extend(self.requirements)
 
         subprocess.run(args, check=True)
 
@@ -185,6 +201,12 @@ int main(int argc, char *argv[])
         """
         self.wheel_filepaths.append(filepath)
 
+    def add_requirement(self, requirement):
+        """
+        Adds a requirement to be installed (e.g. a PyPI package).
+        """
+        self.requirements.append(requirement)
+
     def add_script(self, module, method, executable_name, console=True):
         """
         Adds a console script to be converted to an exectuable.
@@ -228,8 +250,9 @@ int main(int argc, char *argv[])
         # Install pip
         self._install_pip(python_executable)
 
-        # Install project
+        # Install wheels and requirements
         self._install_wheels(python_executable)
+        self._install_requirements(python_executable)
 
         # Process entry points
         for module, method, executable_name, console in self.scripts:
@@ -237,6 +260,7 @@ int main(int argc, char *argv[])
 
         # Create zip
         if zip_dist:
+            logger.info('creating zip')
             zipfilepath = os.path.join(dist_dir, fullname + ".zip")
 
             with zipfile.ZipFile(zipfilepath, "w") as zf:
