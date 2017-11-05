@@ -14,7 +14,7 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(BASEDIR, 'README.rst'), 'r') as fp:
     LONG_DESCRIPTION = fp.read()
 
-INSTALL_REQUIRES = ['wheel', 'requests']
+INSTALL_REQUIRES = ['wheel', 'requests', 'requests-cache']
 EXTRAS_REQUIRE = {'develop': ['nose', 'coverage']}
 
 setup(name="py2win",
