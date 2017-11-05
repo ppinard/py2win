@@ -6,6 +6,8 @@ import sys
 import glob
 import shutil
 import zipfile
+import tarfile
+import fnmatch
 import subprocess
 from distutils import sysconfig
 from distutils.ccompiler import new_compiler
@@ -14,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 # Third party modules.
 import requests
+import requests_cache
+requests_cache.install_cache()
 
 # Local modules.
 
@@ -21,6 +25,7 @@ import requests
 
 class EmbedPython:
 
+    PYTHON_SOURCE_BASEURL = 'https://www.python.org/ftp/python/{version}/Python-{version}.tgz'
     PYTHON_EMBED_BASEURL = 'https://www.python.org/ftp/python/{version}/python-{version}-embed-{arch}.zip'
     GET_PIP_URL = 'https://bootstrap.pypa.io/get-pip.py'
     PYTHON_MANIFEST_URL = 'https://raw.githubusercontent.com/python/cpython/master/PC/python.manifest'
@@ -74,6 +79,9 @@ int main(int argc, char *argv[])
         https://stackoverflow.com/questions/16694907/how-to-download-large-file-in-python-with-requests-py
         """
         r = requests.get(url, stream=True)
+        if r.status_code != 200:
+            raise IOError('Cannot download {}'.format(url))
+
         with open(filepath, 'wb') as f:
             shutil.copyfileobj(r.raw, f)
         r.close()
@@ -109,6 +117,38 @@ int main(int argc, char *argv[])
         for filepath in glob.glob(os.path.join(workdir, '*._pth')):
             os.remove(filepath)
 
+    def _fix_lib2to3(self, workdir):
+        logger.info('fixing lib2to3')
+
+        tarfilepath = os.path.join(workdir, 'python_source.tgz')
+
+        try:
+            version = '{0.major}.{0.minor}.{0.micro}'.format(sys.version_info)
+            url = self.PYTHON_SOURCE_BASEURL.format(version=version)
+
+            logger.info('downloading {0}'.format(url))
+            self._download_file(url, tarfilepath)
+
+            logger.info('extracting files in {0}'.format(workdir))
+            with tarfile.open(tarfilepath) as tar:
+                for member in tar.getmembers():
+                    if not fnmatch.fnmatch(member.name, 'Python-*/Lib/lib2to3/fixes/*.py') and \
+                            not fnmatch.fnmatch(member.name, 'Python-*/Lib/lib2to3/pgen2/*.py'):
+                        continue
+
+                    logger.debug('extracting {0}'.format(member.name))
+                    buf = tar.extractfile(member)
+
+                    _, path = member.name.split('/', 1)
+                    filepath = os.path.join(workdir, path)
+                    with open(filepath, 'wb') as fp:
+                        fp.write(buf.read())
+
+                    buf.close()
+        finally:
+            if os.path.exists(tarfilepath):
+                os.remove(tarfilepath)
+
     def _install_pip(self, python_executable):
         filepath = os.path.join(os.path.dirname(python_executable), 'get-pip.py')
 
@@ -116,7 +156,9 @@ int main(int argc, char *argv[])
             logger.info('downloading {0}'.format(self.GET_PIP_URL))
             self._download_file(self.GET_PIP_URL, filepath)
 
-            subprocess.run([python_executable, filepath], check=True)
+            args = [python_executable, filepath]
+            logger.debug('running {0}'.format(' '.join(args)))
+            subprocess.run(args, check=True)
         finally:
             if os.path.exists(filepath):
                 os.remove(filepath)
@@ -135,6 +177,7 @@ int main(int argc, char *argv[])
             for filepath in glob.glob(os.path.join(self.extra_wheel_dir, '*.whl')):
                 args.append(filepath)
 
+        logger.debug('running {0}'.format(' '.join(args)))
         subprocess.run(args, check=True)
 
     def _install_requirements(self, python_executable):
@@ -147,11 +190,12 @@ int main(int argc, char *argv[])
 
         args.extend(self.requirements)
 
+        logger.debug('running {0}'.format(' '.join(args)))
         subprocess.run(args, check=True)
 
     def _create_main(self, workdir, module, method, executable_name, console=True):
         # Create code
-        logger.info('writing main exe code')
+        logger.info('writing main executable code')
 
         c_filepath = os.path.join(workdir, executable_name + '.c')
 
@@ -164,13 +208,15 @@ int main(int argc, char *argv[])
             fp.write(content)
 
         # Create manifest
-        logger.info('downloading Python manifest from GitHub')
+        logger.info('downloading Python manifest')
 
         manifest_filepath = os.path.join(workdir, executable_name + '.exe.manifest')
 
         self._download_file(self.PYTHON_MANIFEST_URL, manifest_filepath)
 
         # Compile
+        logger.info('compiling main executable code')
+
         objects = []
         try:
             compiler = new_compiler(verbose=True)
@@ -194,6 +240,17 @@ int main(int argc, char *argv[])
                 os.remove(manifest_filepath)
             for filepath in objects:
                 os.remove(filepath)
+
+    def _create_zip(self, workdir, dist_dir, fullname):
+        logger.info('creating zip')
+        zipfilepath = os.path.join(dist_dir, fullname + ".zip")
+
+        with zipfile.ZipFile(zipfilepath, "w") as zf:
+            for dirpath, _dirnames, filenames in os.walk(workdir):
+                for name in filenames:
+                    path = os.path.normpath(os.path.join(dirpath, name))
+                    if os.path.isfile(path):
+                        zf.write(path, path)
 
     def add_wheel(self, filepath):
         """
@@ -246,6 +303,7 @@ int main(int argc, char *argv[])
         if not os.path.exists(python_executable):
             self._download_python_embedded(workdir)
             self._prepare_python(workdir)
+            self._fix_lib2to3(workdir)
 
         # Install pip
         self._install_pip(python_executable)
@@ -260,14 +318,6 @@ int main(int argc, char *argv[])
 
         # Create zip
         if zip_dist:
-            logger.info('creating zip')
-            zipfilepath = os.path.join(dist_dir, fullname + ".zip")
-
-            with zipfile.ZipFile(zipfilepath, "w") as zf:
-                for dirpath, _dirnames, filenames in os.walk(workdir):
-                    for name in filenames:
-                        path = os.path.normpath(os.path.join(dirpath, name))
-                        if os.path.isfile(path):
-                            zf.write(path, path)
+            self._create_zip(workdir, dist_dir, fullname)
 
         return workdir
