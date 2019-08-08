@@ -48,8 +48,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 int main(int argc, char *argv[])
 {{
-    wchar_t *args[] = {{ L"-I", L"-c", L"import {module}; {module}.{method}()" }};
-    return Py_Main(3, args);
+    wchar_t** _argv = PyMem_Malloc(sizeof(wchar_t*)*(argc + 2));
+    _argv[0] = L"-I";
+    _argv[1] = L"-c";
+    _argv[2] = L"import {module}; {module}.{method}(prog_name='{executable_name}')";
+    for (int i=1; i<argc; i++) {{
+      wchar_t* arg = Py_DecodeLocale(argv[i], NULL);
+      _argv[i + 2] = arg;
+    }}
+    return Py_Main(argc + 2, _argv);
 }}
     """
 
@@ -200,7 +207,7 @@ int main(int argc, char *argv[])
         c_filepath = os.path.join(workdir, executable_name + '.c')
 
         if console:
-            content = self.PYTHON_CONSOLE_MAIN_CODE.format(module=module, method=method)
+            content = self.PYTHON_CONSOLE_MAIN_CODE.format(module=module, method=method, executable_name=executable_name)
         else:
             content = self.PYTHON_GUI_MAIN_CODE.format(module=module, method=method)
 
