@@ -2,9 +2,6 @@ import sys
 import argparse
 
 def main():
-    print('Arguments:')
-    print(sys.argv)
-
     parser = argparse.ArgumentParser(description='Sample')
 
     parser.add_argument('--hello', action='store_true', help='Say hello')
@@ -14,6 +11,8 @@ def main():
     if args.hello:
         print('Hello world')
     else:
+        print('Arguments:')
+        print(sys.argv)
         parser.print_help()
 
 if __name__ == '__main__':
