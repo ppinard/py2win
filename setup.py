@@ -19,7 +19,7 @@ EXTRAS_REQUIRE = {"dev": ["pytest", "pytest-cov", "coverage"]}
 
 setup(
     name="py2win",
-    version="0.1.0",
+    version="0.2.0",
     url="https://github.com/ppinard/py2win",
     description="Create a stand-alone Windows distribution of a Python program",
     long_description=LONG_DESCRIPTION,

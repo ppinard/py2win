@@ -15,8 +15,12 @@ and *pip* to create the stand-alone distribution.
 Installation
 ------------
 
-You first need to **install Microsoft Visual Studio**, compatible with your current
-Python installation. Then simply run:
+You need:
+
+* Python >= 3.6
+* Microsoft Visual Studio, compatible with your current Python installation
+
+Then simply run:
 
 .. code::
 
@@ -65,8 +69,8 @@ In a separate Python script (e.g. a ``release.py`` file in the root directory), 
 Release notes
 -------------
 
-Dev
-^^^
+0.2.0
+^^^^^
 
 * Add support for arguments in console script (`PR#1 <https://github.com/ppinard/py2win/pull/1>`_)
 * Use `pathlib <https://docs.python.org/3/library/pathlib.html>`_ for paths
