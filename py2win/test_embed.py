@@ -52,7 +52,7 @@ class TestEmbedPython(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(workdir, 'sample-console.exe')))
         self.assertTrue(os.path.exists(os.path.join(workdir, 'sample-gui.exe')))
 
-        args = [os.path.join(workdir, 'sample-console.exe')]
+        args = [os.path.join(workdir, 'sample-console.exe'), '--hello']
         out = subprocess.run(args, cwd=workdir, check=True, stdout=subprocess.PIPE)
         self.assertEqual(b'Hello world', out.stdout.strip())
 
