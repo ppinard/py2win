@@ -89,7 +89,6 @@ int main(int argc, char *argv[])
         self.requirements = []
         self.wheel_filepaths = []
         self.scripts = []
-        self.pypi_packages = []
 
     def _download_file(self, url, filepath):
         """
@@ -212,14 +211,6 @@ int main(int argc, char *argv[])
         logger.debug('running {0}'.format(' '.join(args)))
         subprocess.run(args, check=True)
 
-    def _install_pypi_packages(self, python_executable):
-        if not self.pypi_packages:
-            return
-
-        args = [str(python_executable), '-m', 'pip', 'install', '-U', '--no-warn-script-location']
-        args.extend(self.pypi_packages)
-        subprocess.run(args, check=True)
-
     def _create_main(self, workdir, module, method, executable_name, console=True):
         # Create code
         logger.info('writing main executable code')
@@ -303,9 +294,6 @@ int main(int argc, char *argv[])
         """
         self.scripts.append([module, method, executable_name, console])
 
-    def add_pypi_package(self, package):
-        self.pypi_packages.append(package)
-
     def run(self, dist_dir, clean=True, zip_dist=False):
         """
         Creates an embedded distribution with the specified wheel(s) and script(s).
@@ -342,7 +330,6 @@ int main(int argc, char *argv[])
         # Install wheels, pypi and requirements
         self._install_wheels(python_executable)
         self._install_requirements(python_executable)
-        self._install_pypi_packages(python_executable)
 
         # Process entry points
         for module, method, executable_name, console in self.scripts:
