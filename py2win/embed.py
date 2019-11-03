@@ -1,9 +1,8 @@
 """"""
 
 # Standard library modules.
-import os
+from pathlib import Path
 import sys
-import glob
 import shutil
 import zipfile
 import tarfile
@@ -42,7 +41,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     return Py_Main(3, args);
 }}
     """
-    
+
     """
     According to the Python sys.argv documentation, "If the command was executed using the -c command line option to the interpreter, argv[0] is set to the string '-c'".
     This causes problem with argument parsers which expects the program name to be the first argument.
@@ -62,11 +61,11 @@ int main(int argc, char *argv[])
       wchar_t* arg = Py_DecodeLocale(argv[i], NULL);
       _argv[i + 2] = arg;
     }}
-    
+
     int returncode = Py_Main(argc + 2, _argv);
-    
+
     PyMem_Free(_argv);
-    
+
     return returncode;
 }}
     """
@@ -106,7 +105,7 @@ int main(int argc, char *argv[])
         r.close()
 
     def _download_python_embedded(self, workdir):
-        filepath = os.path.join(workdir, 'python_embed.zip')
+        filepath = workdir.joinpath('python_embed.zip')
 
         try:
             version = '{0.major}.{0.minor}.{0.micro}'.format(sys.version_info)
@@ -121,25 +120,25 @@ int main(int argc, char *argv[])
             with zipfile.ZipFile(filepath, 'r') as zf:
                 zf.extractall(workdir)
         finally:
-            if os.path.exists(filepath):
-                os.remove(filepath)
+            if filepath.exists():
+                filepath.unlink()
 
     def _prepare_python(self, workdir):
         logger.info('extracting python3X.zip')
 
-        for filepath in glob.glob(os.path.join(workdir, 'python*.zip')):
+        for filepath in workdir.glob('python*.zip'):
             with zipfile.ZipFile(filepath, 'r') as zf:
-                zf.extractall(os.path.join(workdir, 'Lib'))
+                zf.extractall(workdir.joinpath('Lib'))
 
-            os.remove(filepath)
+            filepath.unlink()
 
-        for filepath in glob.glob(os.path.join(workdir, '*._pth')):
-            os.remove(filepath)
+        for filepath in workdir.glob('*._pth'):
+            filepath.unlink()
 
     def _fix_lib2to3(self, workdir):
         logger.info('fixing lib2to3')
 
-        tarfilepath = os.path.join(workdir, 'python_source.tgz')
+        tarfilepath = workdir.joinpath('python_source.tgz')
 
         try:
             version = '{0.major}.{0.minor}.{0.micro}'.format(sys.version_info)
@@ -159,42 +158,43 @@ int main(int argc, char *argv[])
                     buf = tar.extractfile(member)
 
                     _, path = member.name.split('/', 1)
-                    filepath = os.path.join(workdir, path)
+                    filepath = workdir.joinpath(path)
                     with open(filepath, 'wb') as fp:
                         fp.write(buf.read())
 
                     buf.close()
         finally:
-            if os.path.exists(tarfilepath):
-                os.remove(tarfilepath)
+            if tarfilepath.exists():
+                tarfilepath.unlink()
 
     def _install_pip(self, python_executable):
-        filepath = os.path.join(os.path.dirname(python_executable), 'get-pip.py')
+        filepath = python_executable.with_name('get-pip.py')
 
         try:
             logger.info('downloading {0}'.format(self.GET_PIP_URL))
             self._download_file(self.GET_PIP_URL, filepath)
 
-            args = [python_executable, filepath]
+            args = [str(python_executable), str(filepath)]
             logger.debug('running {0}'.format(' '.join(args)))
             subprocess.run(args, check=True)
         finally:
-            if os.path.exists(filepath):
-                os.remove(filepath)
+            if filepath.exists():
+                filepath.unlink()
 
     def _install_wheels(self, python_executable):
         if not self.wheel_filepaths:
             return
 
-        args = [python_executable, '-m', 'pip', 'install', '-U']
+        args = [str(python_executable), '-m', 'pip', 'install', '-U']
         if self.extra_wheel_dir:
-            args += ['--find-links', self.extra_wheel_dir]
+            args += ['--find-links', str(self.extra_wheel_dir)]
 
-        args.extend(self.wheel_filepaths)
+        for wheel_filepath in self.wheel_filepaths:
+            args.append(str(wheel_filepath))
 
-        if self.extra_wheel_dir:
-            for filepath in glob.glob(os.path.join(self.extra_wheel_dir, '*.whl')):
-                args.append(filepath)
+        if self.extra_wheel_dir is not None:
+            for filepath in self.extra_wheel_dir.glob('*.whl'):
+                args.append(str(filepath))
 
         logger.debug('running {0}'.format(' '.join(args)))
         subprocess.run(args, check=True)
@@ -203,9 +203,9 @@ int main(int argc, char *argv[])
         if not self.requirements:
             return
 
-        args = [python_executable, '-m', 'pip', 'install', '-U']
+        args = [str(python_executable), '-m', 'pip', 'install', '-U']
         if self.extra_wheel_dir:
-            args += ['--find-links', self.extra_wheel_dir]
+            args += ['--find-links', str(self.extra_wheel_dir)]
 
         args.extend(self.requirements)
 
@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
         if not self.pypi_packages:
             return
 
-        args = [python_executable, '-m', 'pip', 'install', '-U']
+        args = [str(python_executable), '-m', 'pip', 'install', '-U']
         args.extend(self.pypi_packages)
         subprocess.run(args, check=True)
 
@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
         # Create code
         logger.info('writing main executable code')
 
-        c_filepath = os.path.join(workdir, executable_name + '.c')
+        c_filepath = workdir.joinpath(executable_name + '.c')
 
         if console:
             content = self.PYTHON_CONSOLE_MAIN_CODE.format(module=module, method=method)
@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
         # Create manifest
         logger.info('downloading Python manifest')
 
-        manifest_filepath = os.path.join(workdir, executable_name + '.exe.manifest')
+        manifest_filepath = workdir.joinpath(executable_name + '.exe.manifest')
 
         self._download_file(self.PYTHON_MANIFEST_URL, manifest_filepath)
 
@@ -255,29 +255,27 @@ int main(int argc, char *argv[])
             if plat_py_include != py_include:
                 compiler.include_dirs.append(plat_py_include)
 
-            compiler.library_dirs.append(os.path.join(sys.base_exec_prefix, 'libs'))
+            library_dir = Path(sys.base_exec_prefix).joinpath('libs')
+            compiler.library_dirs.append(str(library_dir))
 
-            objects = compiler.compile([c_filepath])
-            output_progname = os.path.join(workdir, executable_name)
+            objects = compiler.compile([str(c_filepath)])
+            output_progname = str(workdir.joinpath(executable_name))
             compiler.link_executable(objects, output_progname)
         finally:
-            if os.path.exists(c_filepath):
-                os.remove(c_filepath)
-            if os.path.exists(manifest_filepath):
-                os.remove(manifest_filepath)
+            if c_filepath.exists():
+                c_filepath.unlink()
+
+            if manifest_filepath.exists():
+                manifest_filepath.unlink()
+
             for filepath in objects:
-                os.remove(filepath)
+                filepath = Path(filepath)
+                if filepath.exists():
+                    filepath.unlink()
 
     def _create_zip(self, workdir, dist_dir, fullname):
         logger.info('creating zip')
-        zipfilepath = os.path.join(dist_dir, fullname + ".zip")
-
-        with zipfile.ZipFile(zipfilepath, "w") as zf:
-            for dirpath, _dirnames, filenames in os.walk(workdir):
-                for name in filenames:
-                    path = os.path.normpath(os.path.join(dirpath, name))
-                    if os.path.isfile(path):
-                        zf.write(path, path)
+        shutil.make_archive(fullname, 'zip', dist_dir, workdir)
 
     def add_wheel(self, filepath):
         """
@@ -321,16 +319,19 @@ int main(int argc, char *argv[])
         if sys.version_info.major != 3:
             raise OSError('Only Python 3 supported')
 
+        dist_dir = Path(dist_dir)
+        fullname = f'{self.project_name}-{self.project_version}'
+
         # Create working directory
-        fullname = '{0}-{1}'.format(self.project_name, self.project_version)
-        workdir = os.path.join(dist_dir, fullname)
-        if os.path.exists(workdir) and clean:
+        workdir = dist_dir.joinpath(fullname)
+        if workdir.exists() and clean:
             shutil.rmtree(workdir)
-        os.makedirs(workdir, exist_ok=True)
+
+        workdir.mkdir(parents=True, exist_ok=True)
 
         # Install python
-        python_executable = os.path.join(workdir, 'python.exe')
-        if not os.path.exists(python_executable):
+        python_executable = workdir.joinpath('python.exe')
+        if not python_executable.exists():
             self._download_python_embedded(workdir)
             self._prepare_python(workdir)
             self._fix_lib2to3(workdir)

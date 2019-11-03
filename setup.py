@@ -15,7 +15,7 @@ with open(os.path.join(BASEDIR, 'README.rst'), 'r') as fp:
     LONG_DESCRIPTION = fp.read()
 
 INSTALL_REQUIRES = ['wheel', 'requests', 'requests-cache']
-EXTRAS_REQUIRE = {'develop': ['nose', 'coverage']}
+EXTRAS_REQUIRE = {'dev': ['pytest', 'pytest-cov', 'coverage']}
 
 setup(name="py2win",
       version='0.1.0',
@@ -37,7 +37,5 @@ setup(name="py2win",
 
       install_requires=INSTALL_REQUIRES,
       extras_require=EXTRAS_REQUIRE,
-
-      test_suite='nose.collector',
 )
 
