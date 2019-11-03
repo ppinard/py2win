@@ -62,7 +62,12 @@ int main(int argc, char *argv[])
       wchar_t* arg = Py_DecodeLocale(argv[i], NULL);
       _argv[i + 2] = arg;
     }}
-    return Py_Main(argc + 2, _argv);
+    
+    int returncode = Py_Main(argc + 2, _argv);
+    
+    PyMem_Free(_argv);
+    
+    return returncode;
 }}
     """
 
