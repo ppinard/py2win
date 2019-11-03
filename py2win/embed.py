@@ -272,6 +272,7 @@ int main(int argc, char *argv[])
         """
         Adds a wheel to be installed.
         """
+        filepath = Path(filepath)
         self.wheel_filepaths.append(filepath)
 
     def add_requirement(self, requirement):
