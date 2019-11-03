@@ -50,13 +50,16 @@ As a command in ``setup.py``
 As a separate script to create an embedded distribution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+In a separate Python script (e.g. a ``release.py`` file in the root directory), you can define the embed process using the ``EmbedPython`` class and call the ``run`` method.
+
 .. code:: python
 
    from py2win.embed import EmbedPython
 
    embed = EmbedPython('sample', '1.2.0')
    embed.add_wheel(filepath_to_wheel_of_your_project)
-   embed.add_script('project.gui', 'main', 'project-gui', console=False)
+   embed.add_requirement('PyQt5')
+   embed.add_script(module='project.gui', method='main', executable_name='project-gui', console=False)
    embed.run(destination_directory)
 
 Release notes
@@ -66,7 +69,8 @@ Dev
 ^^^
 
 * Add support for arguments in console script (`PR#1 <https://github.com/ppinard/py2win/pull/1>`_)
-
+* Use `pathlib <https://docs.python.org/3/library/pathlib.html>`_ for paths
+* Use `pytest <https://pytest.org/en/latest/>`_ for tests
 
 0.1.0
 ^^^^^
