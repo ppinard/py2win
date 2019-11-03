@@ -10,4 +10,4 @@ install:
 build: off
 
 test_script:
-  - "%PYTHON%\\pytest.exe"
+  - "%PYTHON%\\Scripts\\pytest.exe"
