@@ -71,6 +71,7 @@ Dev
 * Add support for arguments in console script (`PR#1 <https://github.com/ppinard/py2win/pull/1>`_)
 * Use `pathlib <https://docs.python.org/3/library/pathlib.html>`_ for paths
 * Use `pytest <https://pytest.org/en/latest/>`_ for tests
+* Use `black <https://github.com/psf/black>`_ for formatting
 
 0.1.0
 ^^^^^

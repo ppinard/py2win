@@ -3,6 +3,7 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QLabel, QGridLayout, QWidget
 from PyQt5.QtCore import QSize
 
+
 class HelloWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
@@ -20,11 +21,13 @@ class HelloWindow(QMainWindow):
         title.setAlignment(QtCore.Qt.AlignCenter)
         gridLayout.addWidget(title, 0, 0)
 
+
 def main():
     app = QtWidgets.QApplication(sys.argv)
     mainWin = HelloWindow()
     mainWin.show()
     sys.exit(app.exec_())
+
 
 if __name__ == "__main__":
     main()
