@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
         if not self.wheel_filepaths:
             return
 
-        args = [str(python_executable), '-m', 'pip', 'install', '-U']
+        args = [str(python_executable), '-m', 'pip', 'install', '-U', '--no-warn-script-location']
         if self.extra_wheel_dir:
             args += ['--find-links', str(self.extra_wheel_dir)]
 
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
         if not self.requirements:
             return
 
-        args = [str(python_executable), '-m', 'pip', 'install', '-U']
+        args = [str(python_executable), '-m', 'pip', 'install', '-U', '--no-warn-script-location']
         if self.extra_wheel_dir:
             args += ['--find-links', str(self.extra_wheel_dir)]
 
@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
         if not self.pypi_packages:
             return
 
-        args = [str(python_executable), '-m', 'pip', 'install', '-U']
+        args = [str(python_executable), '-m', 'pip', 'install', '-U', '--no-warn-script-location']
         args.extend(self.pypi_packages)
         subprocess.run(args, check=True)
 
