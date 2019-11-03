@@ -30,7 +30,7 @@ class Testbdist_windows(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(distdir, 'sample-console.exe')))
         self.assertTrue(os.path.exists(os.path.join(distdir, 'sample-gui.exe')))
 
-        args = [os.path.join(distdir, 'sample-console.exe')]
+        args = [os.path.join(distdir, 'sample-console.exe'), '--hello']
         out = subprocess.run(args, cwd=distdir, check=True, stdout=subprocess.PIPE)
         self.assertEqual(b'Hello world', out.stdout.strip())
 
