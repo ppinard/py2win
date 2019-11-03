@@ -56,11 +56,11 @@ int main(int argc, char *argv[])
     def __init__(self, project_name, project_version, extra_wheel_dir=None):
         """
         Creates the class to create an embedded distribution.
-        
+
         Use :meth:`add_wheel` to add wheel(s) associated to the project.
         Use :meth:`add_script` to specify which script to convert to an executable.
         Then call :meth:`run`.
-        
+
         :arg project_name: project name
         :arg project_version: project version (e.g. ``0.1.2``)
         :arg extra_wheel_dir: directory containing wheels to use instead of
@@ -72,6 +72,7 @@ int main(int argc, char *argv[])
         self.requirements = []
         self.wheel_filepaths = []
         self.scripts = []
+        self.pypi_packages = []
 
     def _download_file(self, url, filepath):
         """
@@ -193,6 +194,14 @@ int main(int argc, char *argv[])
         logger.debug('running {0}'.format(' '.join(args)))
         subprocess.run(args, check=True)
 
+    def _install_pypi_packages(self, python_executable):
+        if not self.pypi_packages:
+            return
+
+        args = [python_executable, '-m', 'pip', 'install', '-U']
+        args.extend(self.pypi_packages)
+        subprocess.run(args, check=True)
+
     def _create_main(self, workdir, module, method, executable_name, console=True):
         # Create code
         logger.info('writing main executable code')
@@ -267,7 +276,7 @@ int main(int argc, char *argv[])
     def add_script(self, module, method, executable_name, console=True):
         """
         Adds a console script to be converted to an exectuable.
-        
+
         :arg module: module containing the method to start the script
             (e.g. ``package1.sample.gui``)
         :arg method: name of method to execute
@@ -278,10 +287,13 @@ int main(int argc, char *argv[])
         """
         self.scripts.append([module, method, executable_name, console])
 
+    def add_pypi_package(self, package):
+        self.pypi_packages.append(package)
+
     def run(self, dist_dir, clean=True, zip_dist=False):
         """
         Creates an embedded distribution with the specified wheel(s) and script(s).
-        
+
         :arg dist_dir: destination directory
         :arg clean: whether to remove all existing files in the destination directory
         :arg zip_dist: whether to create a zip of the distribution
@@ -308,9 +320,10 @@ int main(int argc, char *argv[])
         # Install pip
         self._install_pip(python_executable)
 
-        # Install wheels and requirements
+        # Install wheels, pypi and requirements
         self._install_wheels(python_executable)
         self._install_requirements(python_executable)
+        self._install_pypi_packages(python_executable)
 
         # Process entry points
         for module, method, executable_name, console in self.scripts:
