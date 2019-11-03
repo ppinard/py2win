@@ -42,6 +42,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     return Py_Main(3, args);
 }}
     """
+    
+    """
+    According to the Python sys.argv documentation, "If the command was executed using the -c command line option to the interpreter, argv[0] is set to the string '-c'".
+    This causes problem with argument parsers which expects the program name to be the first argument.
+    The ``sys.argv`` are therefore modified to set first argument as the executable.
+    """
     PYTHON_CONSOLE_MAIN_CODE = """
 #include <stdio.h>
 #include <Python.h>
@@ -51,7 +57,7 @@ int main(int argc, char *argv[])
     wchar_t** _argv = PyMem_Malloc(sizeof(wchar_t*)*(argc + 2));
     _argv[0] = L"-I";
     _argv[1] = L"-c";
-    _argv[2] = L"import {module}; {module}.{method}(prog_name='{executable_name}')";
+    _argv[2] = L"import sys; sys.argv[0] = sys.executable; import {module}; {module}.{method}()";
     for (int i=1; i<argc; i++) {{
       wchar_t* arg = Py_DecodeLocale(argv[i], NULL);
       _argv[i + 2] = arg;
@@ -207,7 +213,7 @@ int main(int argc, char *argv[])
         c_filepath = os.path.join(workdir, executable_name + '.c')
 
         if console:
-            content = self.PYTHON_CONSOLE_MAIN_CODE.format(module=module, method=method, executable_name=executable_name)
+            content = self.PYTHON_CONSOLE_MAIN_CODE.format(module=module, method=method)
         else:
             content = self.PYTHON_GUI_MAIN_CODE.format(module=module, method=method)
 
