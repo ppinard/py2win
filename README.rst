@@ -1,6 +1,5 @@
-######
 py2win
-######
+======
 
 .. image:: https://img.shields.io/pypi/v/py2win.svg
    :target: https://pypi.python.org/pypi/py2win
@@ -9,25 +8,25 @@ py2win
    :target: https://ci.appveyor.com/project/ppinard/py2win
 
 Utility to create a stand-alone distribution of a Python program,
-either a console or GUI program. 
-*py2win* uses `Python embedded distribution <https://docs.python.org/3.6/using/windows.html#embedded-distribution>`_ 
+either a console or GUI program.
+*py2win* uses `Python embedded distribution <https://docs.python.org/3.8/using/windows.html#embedded-distribution>`_
 and *pip* to create the stand-alone distribution.
 
 Installation
-============
+------------
 
-You first need to install Microsoft Visual Studio, compatible with your current 
+You first need to **install Microsoft Visual Studio**, compatible with your current
 Python installation. Then simply run:
 
-.. code:: 
+.. code::
 
    pip install py2win
 
 How to use
-==========
+------------
 
 As a command in ``setup.py``
-----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Define at least one entry point in your ``setup.py``.
 
@@ -41,36 +40,47 @@ As a command in ``setup.py``
         },
         ...
         )
-        
+
 2. Run the ``bdist_windows`` command
 
-.. code:: 
+.. code::
 
    python setup.py --command-packages py2win bdist_windows
-   
+
 As a separate script to create an embedded distribution
--------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: python
 
    from py2win.embed import EmbedPython
-   
+
    embed = EmbedPython('sample', '1.2.0')
    embed.add_wheel(filepath_to_wheel_of_your_project)
    embed.add_script('project.gui', 'main', 'project-gui', console=False)
    embed.run(destination_directory)
-   
+
 Release notes
-=============
+-------------
+
+Dev
+^^^
+
+* Add support for arguments in console script (`PR#1 <https://github.com/ppinard/py2win/pull/1>`_)
+
 
 0.1.0
------
+^^^^^
 
 * First release
 
+Contributors
+------------
+
+`@trollfred <https://github.com/trollfred>`_
+
 License
-=======
+-------
 
 The library is provided under the MIT license.
 
-Copyright (c) 2017 Philippe Pinard
+Copyright (c) 2017-2019 Philippe Pinard
