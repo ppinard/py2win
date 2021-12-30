@@ -8,8 +8,8 @@ import zipfile
 import tarfile
 import fnmatch
 import subprocess
-from distutils import sysconfig
-from distutils.ccompiler import new_compiler
+import sysconfig
+from setuptools._distutils.ccompiler import new_compiler
 import logging
 
 logger = logging.getLogger(__name__)
