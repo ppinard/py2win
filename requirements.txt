@@ -1,3 +1,4 @@
 wheel
 requests
 requests-cache
+setuptools

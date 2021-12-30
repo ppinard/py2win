@@ -2,6 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/py2win)](https://pypi.org/project/py2win)
 [![CI](https://github.com/ppinard/py2win/actions/workflows/ci.yml/badge.svg)](https://github.com/ppinard/py2win/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/ppinard/py2win/branch/master/graph/badge.svg?token=CwKDVmx71Q)](https://codecov.io/gh/ppinard/py2win)
 
 Utility to create a stand-alone distribution of a Python program, either a console or GUI program.
 *py2win* uses [Python embedded distribution](https://docs.python.org/3.10/using/windows.html#embedded-distribution) and *pip* to create the stand-alone distribution.
@@ -37,7 +38,7 @@ setup(
     )
 ```
 
-1. Run the `bdist_windows` command
+2. Run the `bdist_windows` command
 
 ```shell
 python setup.py --command-packages py2win bdist_windows
@@ -59,6 +60,10 @@ embed.run(destination_directory)
 
 ## Release notes
 
+### 0.3.0
+
+* Remove deprecation warning with distutils
+
 ### 0.2.0
 
 * Add support for arguments in console script ([PR#1](https://github.com/ppinard/py2win/pull/1>))
@@ -78,4 +83,4 @@ embed.run(destination_directory)
 
 The library is provided under the MIT license.
 
-Copyright (c) 2017- Philippe Pinard
+Copyright (c) 2017 - , Philippe Pinard
