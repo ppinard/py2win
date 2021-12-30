@@ -266,9 +266,10 @@ int main(int argc, char *argv[])
             compiler = new_compiler(verbose=True)
             compiler.initialize()
 
-            py_include = sysconfig.get_python_inc()
-            plat_py_include = sysconfig.get_python_inc(plat_specific=1)
+            py_include = sysconfig.get_path("include")
             compiler.include_dirs.append(py_include)
+
+            plat_py_include = sysconfig.get_path("platinclude")
             if plat_py_include != py_include:
                 compiler.include_dirs.append(plat_py_include)
 
