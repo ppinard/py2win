@@ -14,8 +14,8 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(BASEDIR, "README.rst"), "r") as fp:
     LONG_DESCRIPTION = fp.read()
 
-INSTALL_REQUIRES = ["wheel", "requests", "requests-cache"]
-EXTRAS_REQUIRE = {"dev": ["pytest", "pytest-cov", "coverage"]}
+with open(os.path.join(BASEDIR, "requirements.txt"), "r") as fp:
+    INSTALL_REQUIRES = fp.read().splitlines()
 
 setup(
     name="py2win",
@@ -37,5 +37,4 @@ setup(
     ],
     packages=find_packages(),
     install_requires=INSTALL_REQUIRES,
-    extras_require=EXTRAS_REQUIRE,
 )
