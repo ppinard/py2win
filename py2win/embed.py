@@ -2,6 +2,7 @@
 
 # Standard library modules.
 from pathlib import Path
+import os
 import sys
 import shutil
 import zipfile
@@ -263,6 +264,9 @@ int main(int argc, char *argv[])
 
         objects = []
         try:
+            cwd = Path.cwd()
+            os.chdir(workdir)
+
             compiler = new_compiler(verbose=True)
             compiler.initialize()
 
@@ -276,24 +280,25 @@ int main(int argc, char *argv[])
             library_dir = Path(sys.base_exec_prefix).joinpath("libs")
             compiler.library_dirs.append(str(library_dir))
 
-            objects = compiler.compile([str(c_filepath)])
-            output_progname = str(workdir.joinpath(executable_name))
-            compiler.link_executable(objects, output_progname)
+            objects = compiler.compile([c_filepath.name])
+            compiler.link_executable(objects, executable_name)
         finally:
+            os.chdir(cwd)
+
             if c_filepath.exists():
                 c_filepath.unlink()
 
             if manifest_filepath.exists():
                 manifest_filepath.unlink()
 
-            for filepath in objects:
-                filepath = Path(filepath)
+            for filename in objects:
+                filepath = workdir.joinpath(filename)
                 if filepath.exists():
                     filepath.unlink()
 
     def _create_zip(self, workdir, dist_dir, fullname):
         logger.info("creating zip")
-        shutil.make_archive(fullname, "zip", dist_dir, workdir)
+        shutil.make_archive(dist_dir.joinpath(fullname), "zip", dist_dir, fullname)
 
     def add_wheel(self, filepath):
         """
@@ -335,7 +340,7 @@ int main(int argc, char *argv[])
         if sys.version_info.major != 3:
             raise OSError("Only Python 3 supported")
 
-        dist_dir = Path(dist_dir)
+        dist_dir = Path(dist_dir).resolve()
         fullname = f"{self.project_name}-{self.project_version}"
 
         # Create working directory
