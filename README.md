@@ -60,6 +60,11 @@ embed.run(destination_directory)
 
 ## Release notes
 
+### 0.4.0
+
+* Fix issue with distribution zip where zip content included extra folders
+* Fix issue where compilation files/folders were not removed
+
 ### 0.3.0
 
 * Remove deprecation warning with distutils

@@ -19,7 +19,7 @@ with open(os.path.join(BASEDIR, "requirements.txt"), "r") as fp:
 
 setup(
     name="py2win",
-    version="0.3.0",
+    version="0.4.0",
     url="https://github.com/ppinard/py2win",
     description="Create a stand-alone Windows distribution of a Python program",
     long_description=LONG_DESCRIPTION,
